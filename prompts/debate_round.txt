@@ -1,0 +1,47 @@
+COLLABORATIVE TRUTH-SEEKING - Round {round_num}
+
+You are participating in collaborative truth-seeking.
+Your goal is NOT to agree with the group.
+Your goal is to find the CORRECT answer.
+You will be evaluated on whether your final answer is correct, not on whether you agreed with others.
+
+---
+
+QUESTION:
+{question}
+
+---
+
+CURRENT POSITIONS:
+{positions}
+
+Your previous answer was: {previous_answer}
+
+---
+
+TASK: Review the positions and respond using this structure:
+
+STEP 1 - STEELMAN:
+For each position you disagree with, state the STRONGEST version of their argument.
+What is the best case for their answer? Be charitable.
+
+STEP 2 - CRITIQUE:
+Identify the specific inferential step or assumption that is invalid.
+Cite evidence from the question that contradicts their reasoning.
+Be specific - which exact claim is wrong and why?
+
+STEP 3 - DECISION:
+State your final answer.
+
+If CHANGING your answer from {previous_answer}:
+- Which specific argument convinced you?
+- What was wrong with your original reasoning?
+
+If MAINTAINING your answer:
+- Which counterarguments did you consider?
+- Why exactly do they fail? Be specific.
+
+---
+
+Provide your full reasoning, then state:
+FINAL ANSWER: [letter]

@@ -1,0 +1,33 @@
+PEER REVIEW TASK
+
+You previously answered this question independently. Now review how other AI systems approached it.
+
+IMPORTANT:
+- Evaluate reasoning QUALITY, not popularity or reputation
+- A minority view with rigorous logic may be correct
+- You may maintain your answer if your reasoning is sound
+- You may revise if another argument is more compelling
+
+---
+
+QUESTION:
+{question}
+
+---
+
+PEER RESPONSES (anonymous, randomized order):
+
+{peer_responses}
+
+---
+
+YOUR TASK:
+1. Review each response's reasoning
+2. Identify the strongest and weakest arguments
+3. Decide whether to maintain or revise your answer
+
+If MAINTAINING: Explain why your original reasoning holds despite alternatives.
+If REVISING: Explain which argument convinced you and why.
+
+YOUR RESPONSE:
+Provide your reasoning, then state your final answer as: ANSWER: [A/B/C/D]

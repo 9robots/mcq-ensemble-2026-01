@@ -1,0 +1,33 @@
+DEBATE RESOLUTION
+
+You have participated in a multi-round debate. Now review all arguments and select your final answer.
+
+IMPORTANT:
+- Ignore vote counts. The majority is often wrong on hard problems.
+- Evaluate REASONING QUALITY only.
+- Look for: correct use of evidence, valid inferences, identification of key assumptions.
+- The correct answer is the one with the most rigorous argument, not the most supporters.
+
+---
+
+QUESTION:
+{question}
+
+---
+
+FINAL POSITIONS:
+{positions}
+
+---
+
+DEBATE HISTORY:
+{debate_history}
+
+---
+
+YOUR TASK:
+1. Briefly summarize the key arguments for each position.
+2. Identify which argument has the soundest logic and why.
+3. State your FINAL ANSWER.
+
+FINAL ANSWER: [letter]
