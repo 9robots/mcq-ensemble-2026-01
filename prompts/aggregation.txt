@@ -30,4 +30,6 @@ If MAINTAINING: Explain why your original reasoning holds despite alternatives.
 If REVISING: Explain which argument convinced you and why.
 
 YOUR RESPONSE:
-Provide your reasoning, then state your final answer as: ANSWER: [A/B/C/D]
+Provide your reasoning and decision.
+
+# NOTE: After this response, use extract_answer.txt to get the concrete letter.

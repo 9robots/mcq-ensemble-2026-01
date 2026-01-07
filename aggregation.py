@@ -13,10 +13,14 @@ Design principles:
 
 import random
 import re
+import warnings
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 
 from example import LLMProvider, LLMResponse
+
+# Default seed for reproducibility (set to None for random behavior)
+DEFAULT_SEED = 42
 
 
 @dataclass
@@ -39,6 +43,7 @@ class AggregationResult:
 def build_blind_aggregation_prompt(
     question: str,
     responses: List[NativeResponse],
+    seed: Optional[int] = DEFAULT_SEED,
 ) -> Tuple[str, List[str]]:
     """Build a blind aggregation prompt WITHOUT authority bias.
 
@@ -51,12 +56,25 @@ def build_blind_aggregation_prompt(
     Args:
         question: The question text
         responses: List of native responses from models
+        seed: Random seed for reproducibility (None for random)
 
     Returns:
         (prompt_string, models_in_context_ordered)
     """
-    # Filter valid responses and randomize order
-    valid_responses = [r for r in responses if r.reasoning]
+    # Warn about empty reasoning (not silently filtered)
+    empty_reasoning = [r for r in responses if not r.reasoning]
+    if empty_reasoning:
+        warnings.warn(
+            f"{len(empty_reasoning)} response(s) have empty reasoning and will be "
+            f"included with placeholder text. Models: {[r.model for r in empty_reasoning]}"
+        )
+
+    # Use all responses (don't filter) but mark empty ones
+    valid_responses = list(responses)
+
+    # Reproducible shuffle with seed
+    if seed is not None:
+        random.seed(seed)
     random.shuffle(valid_responses)
 
     # Build anonymous context
@@ -106,13 +124,66 @@ If MAINTAINING: Explain why your original reasoning holds despite alternatives.
 If REVISING: Explain which argument convinced you and why.
 
 YOUR RESPONSE:
-Provide your reasoning, then state your final answer as: ANSWER: [A/B/C/D]"""
+Provide your reasoning and decision."""
 
     return prompt, models_in_context
 
 
+def build_extract_answer_prompt(question: str, response: str) -> str:
+    """Build prompt to extract concrete letter answer from verbose response.
+
+    This is the follow-up call in the double-call pattern.
+    """
+    return f"""{question}
+
+Your response was:
+{response}
+
+Based on your response above, what is your final answer? Reply with only the letter: A, B, C, or D."""
+
+
+def extract_answer_with_followup(
+    question: str,
+    response_text: str,
+    llm_provider: 'LLMProvider',
+    model: str,
+) -> Optional[str]:
+    """Extract answer using follow-up call (double-call pattern).
+
+    Instead of parsing the verbose response, we ask the model directly
+    what letter answer it intended. This avoids formatting tax issues.
+    """
+    prompt = build_extract_answer_prompt(question, response_text)
+    response = llm_provider.call(model, prompt)
+
+    # Simple extraction from follow-up (should be just the letter)
+    text = response.text.strip().upper()
+
+    if text in ('A', 'B', 'C', 'D'):
+        return text
+
+    # Letter with punctuation
+    if len(text) >= 1 and text[0] in ('A', 'B', 'C', 'D'):
+        return text[0]
+
+    # Pattern matching for slightly verbose responses
+    patterns = [
+        r'(?:the\s+)?answer\s*(?:is)?[:\s]+([ABCD])\b',
+        r'\b([ABCD])\b',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
+
+    return None
+
+
 def extract_answer(response_text: str) -> Optional[str]:
-    """Extract the final answer from a response.
+    """Extract the final answer from a response (legacy regex-only).
+
+    DEPRECATED: Use extract_answer_with_followup for double-call pattern.
 
     Looks for patterns like:
     - ANSWER: A
@@ -147,6 +218,7 @@ def aggregate_responses(
     llm_provider: LLMProvider,
     aggregator_model: str = None,
     correct_answer: str = None,
+    seed: Optional[int] = DEFAULT_SEED,
 ) -> AggregationResult:
     """Aggregate multiple model responses using blind peer review.
 
@@ -156,6 +228,7 @@ def aggregate_responses(
         llm_provider: LLM provider for making API calls
         aggregator_model: Model to use for aggregation (if None, uses first model)
         correct_answer: Optional ground truth for scoring
+        seed: Random seed for reproducibility (None for random)
 
     Returns:
         AggregationResult with synthesized answer and reasoning
@@ -171,17 +244,22 @@ def aggregate_responses(
     ]
 
     # Build the aggregation prompt
-    prompt, models_in_context = build_blind_aggregation_prompt(question, responses)
+    prompt, models_in_context = build_blind_aggregation_prompt(question, responses, seed=seed)
 
     # Use first model as aggregator if not specified
     if aggregator_model is None:
         aggregator_model = responses[0].model if responses else "gpt-4"
 
-    # Call the aggregator model
+    # Call the aggregator model (reasoning call)
     response = llm_provider.call(aggregator_model, prompt)
 
-    # Extract the answer
-    answer = extract_answer(response.text)
+    # Extract the answer using follow-up call (double-call pattern)
+    answer = extract_answer_with_followup(
+        question=question,
+        response_text=response.text,
+        llm_provider=llm_provider,
+        model=aggregator_model,
+    )
 
     # Score if ground truth provided
     is_correct = None

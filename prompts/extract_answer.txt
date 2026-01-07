@@ -1,0 +1,14 @@
+# Extract Answer Prompt (Follow-up Call)
+#
+# Purpose: Get a concrete letter answer after any verbose response
+# Used after: aggregation, debate rounds, debate resolution
+#
+# The model needs the original question (with options) plus its response
+# to give a definitive A/B/C/D answer.
+
+{question}
+
+Your response was:
+{response}
+
+Based on your response above, what is your final answer? Reply with only the letter: A, B, C, or D.

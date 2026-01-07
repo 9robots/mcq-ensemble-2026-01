@@ -28,6 +28,8 @@ DEBATE HISTORY:
 YOUR TASK:
 1. Briefly summarize the key arguments for each position.
 2. Identify which argument has the soundest logic and why.
-3. State your FINAL ANSWER.
+3. State your decision.
 
-FINAL ANSWER: [letter]
+Provide your reasoning and decision.
+
+# NOTE: After this response, use extract_answer.txt to get the concrete letter.

@@ -1,0 +1,12 @@
+# Double-Call Protocol: Verdict Prompt (Call A)
+#
+# Purpose: Get the answer letter only, avoiding "formatting tax"
+# The model uses its internal reasoning (xhigh, extended thinking, etc.)
+# but only outputs a simple letter response.
+#
+# Usage: Append this suffix to the question (after stripping any existing
+#        CoT instructions like "Think step-by-step...ANSWER: [letter]")
+
+{question}
+
+Answer with only the letter: A, B, C, or D.

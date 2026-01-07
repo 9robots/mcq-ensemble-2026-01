@@ -106,8 +106,7 @@ If MAINTAINING your answer:
 
 ---
 
-Provide your full reasoning, then state:
-FINAL ANSWER: [letter]"""
+Provide your full reasoning and decision."""
 
     return prompt
 
@@ -169,13 +168,64 @@ DEBATE HISTORY:
 YOUR TASK:
 1. Briefly summarize the key arguments for each position.
 2. Identify which argument has the soundest logic and why.
-3. State your FINAL ANSWER.
+3. State your decision.
 
-FINAL ANSWER: [letter]"""
+Provide your reasoning and decision."""
+
+
+def build_extract_answer_prompt(question: str, response: str) -> str:
+    """Build prompt to extract concrete letter answer from verbose response."""
+    return f"""{question}
+
+Your response was:
+{response}
+
+Based on your response above, what is your final answer? Reply with only the letter: A, B, C, or D."""
+
+
+def extract_answer_with_followup(
+    question: str,
+    response_text: str,
+    llm_provider: 'LLMProvider',
+    model: str,
+) -> Optional[str]:
+    """Extract answer using follow-up call (double-call pattern).
+
+    Instead of parsing the verbose response, we ask the model directly
+    what letter answer it intended. This avoids formatting tax issues.
+    """
+    prompt = build_extract_answer_prompt(question, response_text)
+    response = llm_provider.call(model, prompt)
+
+    # Simple extraction from follow-up (should be just the letter)
+    text = response.text.strip().upper()
+
+    if text in ('A', 'B', 'C', 'D'):
+        return text
+
+    # Letter with punctuation
+    if len(text) >= 1 and text[0] in ('A', 'B', 'C', 'D'):
+        return text[0]
+
+    # Pattern matching for slightly verbose responses
+    patterns = [
+        r'(?:the\s+)?answer\s*(?:is)?[:\s]+([ABCD])\b',
+        r'\b([ABCD])\b',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
+
+    return None
 
 
 def extract_answer(response_text: str) -> Optional[str]:
-    """Extract the final answer from a response."""
+    """Extract the final answer from a response (legacy regex-only).
+
+    DEPRECATED: Use extract_answer_with_followup for double-call pattern.
+    """
     patterns = [
         r'FINAL\s+ANSWER:\s*\[?([A-D])\]?',
         r'(?:FINAL\s+)?ANSWER:\s*\[?([A-D])\]?',
@@ -341,7 +391,14 @@ def run_debate(
             )
 
             response = llm_provider.call(model, prompt)
-            answer = extract_answer(response.text)
+
+            # Use follow-up call to extract answer (double-call pattern)
+            answer = extract_answer_with_followup(
+                question=question,
+                response_text=response.text,
+                llm_provider=llm_provider,
+                model=model,
+            )
 
             round_responses.append({
                 'model': model,
@@ -398,7 +455,15 @@ def _run_resolution_round(
     resolution_responses = []
     for model in models:
         response = llm_provider.call(model, resolution_prompt)
-        answer = extract_answer(response.text)
+
+        # Use follow-up call to extract answer (double-call pattern)
+        answer = extract_answer_with_followup(
+            question=question,
+            response_text=response.text,
+            llm_provider=llm_provider,
+            model=model,
+        )
+
         resolution_responses.append({
             'model': model,
             'answer': answer,

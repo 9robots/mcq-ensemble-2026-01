@@ -43,5 +43,6 @@ If MAINTAINING your answer:
 
 ---
 
-Provide your full reasoning, then state:
-FINAL ANSWER: [letter]
+Provide your full reasoning and decision.
+
+# NOTE: After this response, use extract_answer.txt to get the concrete letter.

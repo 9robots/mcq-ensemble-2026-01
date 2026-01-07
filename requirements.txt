@@ -1,0 +1,11 @@
+# Core dependencies (no version pins for flexibility)
+# Install with: pip install -r requirements.txt
+
+# For OpenAI API
+openai
+
+# For Anthropic API
+anthropic
+
+# For Google Vertex AI (optional)
+google-genai

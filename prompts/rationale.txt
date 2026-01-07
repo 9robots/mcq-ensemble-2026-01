@@ -1,0 +1,12 @@
+# Double-Call Protocol: Rationale Prompt (Call B)
+#
+# Purpose: Get the explanation for the answer
+# This is called AFTER getting the verdict from Call A.
+# The rationale provides context for the aggregation stage.
+#
+# Usage: Append this suffix to the question (after stripping any existing
+#        CoT instructions), replacing {verdict} with the answer from Call A.
+
+{question}
+
+You answered {verdict}. Explain your reasoning for this answer.
